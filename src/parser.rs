@@ -10,6 +10,8 @@ impl Parser {
         }
     }
 
+    /// Identifies the type of command, but does not currently parse
+    /// Not sure how to use this function in conjunction with the stucts, C, A, and L (below)
     pub fn command_type(&self) -> Command {
         if self.instruction.contains("=") || self.instruction.contains(";") {
             Command::C
@@ -21,16 +23,22 @@ impl Parser {
     }
 }
     
-
+// Is it possible to store different types of structs inside the same enum?
 #[derive(Debug, Clone)]
 pub enum Command {
     A,  // { String }
-    Parser::C,  // { String, String, String }
+    C,  // { String, String, String }
     L   // { String }
 }
 
 pub struct A {
     symbol: String
+}
+
+impl A {
+    pub fn new(input: String) -> Result<A> {
+
+    }
 }
 
 
@@ -41,16 +49,24 @@ pub struct C {
 }
 
 impl C {
-    pub fn new(input: String) {
+    pub fn new(input: String) -> Result<C> {
         let semi = input.find(";");
         let equal = input.find("=");
         if let Some(x) = semi {
             let jump = Some(input[x+1..].to_string());
             let dest = None;
             let comp  = input[..x].to_string();
-            C { dest, comp, jump }
-
+            return Ok(C { dest, comp, jump })
         }
+        if let Some(x) = equal {
+            let jump = None;
+            let dest = Some(input[..equal]);
+            let comp = Some(input[equal+1..]);
+            return Ok(C { dest, comp, jump })
+        }
+        Err(
+
+        )
     }
 }
 
