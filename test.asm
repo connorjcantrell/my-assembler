@@ -1,3 +1,3 @@
-// this is a comment
-@16 // another comment
-M=D;
+// This is a comment
+@16     // This A instruction
+M=D;   // C instruction
