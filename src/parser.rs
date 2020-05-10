@@ -1,3 +1,7 @@
+use regex::Regex;
+
+
+/// Assembly language instruction
 #[derive(Debug, Clone)]
 pub struct Parser {
     instruction: String,
@@ -10,66 +14,155 @@ impl Parser {
         }
     }
 
-    /// Identifies the type of command, but does not currently parse
-    /// Not sure how to use this function in conjunction with the stucts, C, A, and L (below)
-    pub fn command_type(&self) -> Command {
-        if self.instruction.contains("=") || self.instruction.contains(";") {
-            Command::C
-        } else if self.instruction.contains("@") {
-            Command::A
-        } else {
-            Command::L
+    /// Identifies the instruction's command type
+    pub fn parse(&self) -> Option<Command> {
+        if let Some(a) = self.a_command() {
+           return Some(Command::A(a))
+        }
+        if let Some(l) = self.l_command() {
+            return Some(Command::L(l))
+        }
+        if let Some(c) = self.c_command() {
+            return Some(Command::C(c.0, c.1, c.2))
+        }
+        None
+    }
+
+    
+    /// Additional parsing can be added
+    fn a_command(&self) -> Option<Symbol> {
+        if let true = self.instruction.starts_with('@') {
+            let a = Regex::new(r"^@(?P<value>[a-zA-Z0-9_][a-zA-Z0-9_.$:]{0,}$)").unwrap();
+            match a.captures(&self.instruction) {
+                Some(cap) => return Some(Symbol::new(&cap["value"])),
+                None => return None
+            }
+        } 
+        None
+    }
+
+    fn c_command(&self) -> Option<(Dest, Comp, Jump)> {
+        let semi = self.instruction.find(';').is_some();
+        let equal = self.instruction.find('=').is_some();
+        match (semi, equal) {
+            (true, false) => {  // comp;jump
+                let c = Regex::new(r"(?P<comp>.{1,3});(?P<jump>.{3})").unwrap();
+                match c.captures(&self.instruction) {
+                    Some(caps) => return Some(
+                        (
+                            Dest::empty(),
+                            Comp::new(&caps["comp"]),
+                            Jump::new(&caps["jump"]),
+                        )
+                    ),
+                    None => return None
+                }
+            },
+            (false , true) => {  // dest=comp
+                let c = Regex::new(r"(?P<dest>.{1,3})=(?P<comp>.{1,3})").unwrap();
+                match c.captures(&self.instruction) {
+                    Some(caps) => return Some(
+                        (
+                            Dest::new(&caps["dest"]),
+                            Comp::new(&caps["comp"]),
+                            Jump::empty(),
+                        )
+                    ),
+                    None => return None
+                }
+
+            },
+            (_, _) => { return None },  // not valid
+        }
+    }
+
+    fn l_command(&self) -> Option<Symbol> {
+        let left_parenthesis = self.instruction.starts_with('(');
+        let right_parenthesis = self.instruction.ends_with(')');
+        match (left_parenthesis, right_parenthesis) {
+            (true, true) => {
+                let l = Regex::new(r"^\((?P<symbol>[^)]+)\)$").unwrap();
+                match l.captures(&self.instruction) {
+                    Some(cap) => Some(Symbol::new(&cap["symbol"])),
+                    None => None
+                }
+            },
+            _ => None
         }
     }
 }
     
-// Is it possible to store different types of structs inside the same enum?
 #[derive(Debug, Clone)]
 pub enum Command {
-    A,  // { String }
-    C,  // { String, String, String }
-    L   // { String }
+    A(Symbol),
+    C(Dest, Comp, Jump),
+    L(Symbol),
 }
 
-pub struct A {
-    symbol: String
+#[derive(Debug, Clone)]
+pub struct Symbol {
+    value: String
 }
 
-impl A {
-    pub fn new(input: String) -> Result<A> {
-
+impl Symbol {
+    pub fn new(input: &str) -> Symbol {
+        Symbol {
+            value: input.to_string()
+        }
     }
 }
 
-
-pub struct C {
-    dest: Option<String>,
-    comp: String,
-    jump: Option<String>
+#[derive(Debug, Clone)]
+pub struct Comp {
+    mnemonic: String,
+    binary: Option<String>,
 }
 
-impl C {
-    pub fn new(input: String) -> Result<C> {
-        let semi = input.find(";");
-        let equal = input.find("=");
-        if let Some(x) = semi {
-            let jump = Some(input[x+1..].to_string());
-            let dest = None;
-            let comp  = input[..x].to_string();
-            return Ok(C { dest, comp, jump })
-        }
-        if let Some(x) = equal {
-            let jump = None;
-            let dest = Some(input[..equal]);
-            let comp = Some(input[equal+1..]);
-            return Ok(C { dest, comp, jump })
-        }
-        Err(
-
-        )
+impl Comp {
+    pub fn new(mnemonic: &str) -> Comp {
+        Comp {mnemonic: mnemonic.to_string(), binary: None}
     }
 }
 
-pub struct L {
-    symbol: String
+#[derive(Debug, Clone)]
+pub struct Dest {
+    mnemonic: Option<String>,
+    binary: Option<String>,
+}
+
+impl Dest {
+    pub fn new(mnemonic: &str) -> Dest {
+        Dest {
+            mnemonic: Some(mnemonic.to_string()),
+            binary: None,
+        }
+    }
+    
+    pub fn empty() -> Dest {
+        Dest {
+            mnemonic: None,
+            binary: None
+        }
+    }
+}
+
+#[derive(Debug, Clone)]
+pub struct Jump {
+    mnemonic: Option<String>,
+    binary: Option<String>,
+}
+
+impl Jump {
+    pub fn new(mnemonic: &str) -> Jump {
+        Jump {
+            mnemonic: Some(mnemonic.to_string()),
+            binary: None,
+        }
+    }
+    pub fn empty() -> Jump {
+        Jump {
+            mnemonic: None,
+            binary: None
+        }
+    }
 }

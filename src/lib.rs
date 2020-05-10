@@ -13,7 +13,7 @@ pub fn run(filename: String) -> std::io::Result<()> {
     for line in contents.lines() {
         if let Some(i) = filter_line(line) {
             let r = Parser::new(i);
-            println!("{:?}", r.command_type());
+            println!("{:?}", r.parse());
         }
     }
     Ok(())
