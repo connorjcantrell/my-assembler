@@ -1,6 +1,5 @@
 use regex::Regex;
 
-
 /// Assembly language instruction
 #[derive(Debug, Clone)]
 pub struct Parser {
@@ -14,7 +13,7 @@ impl Parser {
         }
     }
 
-    /// Identifies the instruction's command type
+    /// Identifies the instruction's command type and parses attributes
     pub fn parse(&self) -> Option<Command> {
         if let Some(a) = self.a_command() {
            return Some(Command::A(a))
@@ -23,13 +22,13 @@ impl Parser {
             return Some(Command::L(l))
         }
         if let Some(c) = self.c_command() {
+            // TODO: Find an alternative for unpacking values
             return Some(Command::C(c.0, c.1, c.2))
         }
         None
     }
 
-    
-    /// Additional parsing can be added
+    // TODO: Rename function
     fn a_command(&self) -> Option<Symbol> {
         if let true = self.instruction.starts_with('@') {
             let a = Regex::new(r"^@(?P<value>[a-zA-Z0-9_][a-zA-Z0-9_.$:]{0,}$)").unwrap();
@@ -41,6 +40,8 @@ impl Parser {
         None
     }
 
+    // TODO: Rename function
+    // TODO: Implement a regex pattern that works for both c-instruction variations
     fn c_command(&self) -> Option<(Dest, Comp, Jump)> {
         let semi = self.instruction.find(';').is_some();
         let equal = self.instruction.find('=').is_some();
@@ -59,7 +60,7 @@ impl Parser {
                 }
             },
             (false , true) => {  // dest=comp
-                let c = Regex::new(r"(?P<dest>.{1,3})=(?P<comp>.{1,3})").unwrap();
+                let c = Regex::new(r"^(?P<dest>[AMD]{1,3})=(?P<comp>.{1,3})").unwrap();
                 match c.captures(&self.instruction) {
                     Some(caps) => return Some(
                         (
@@ -76,6 +77,7 @@ impl Parser {
         }
     }
 
+    // TODO: Rename function
     fn l_command(&self) -> Option<Symbol> {
         let left_parenthesis = self.instruction.starts_with('(');
         let right_parenthesis = self.instruction.ends_with(')');
