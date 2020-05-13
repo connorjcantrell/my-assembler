@@ -1,6 +1,7 @@
 use std::fs::File;
-use std::io::BufReader;
+use std::io::{BufReader, BufWriter};
 use std::io::prelude::*;
+use std::error::Error;
 
 pub mod parser;
 use parser::Parser;
@@ -12,27 +13,50 @@ pub fn run(filename: String) -> std::io::Result<()> {
     let mut buffered = BufReader::new(assembly);
     let mut contents = String::new();
     buffered.read_to_string(&mut contents)?;
-    
-    let mut success = 0;
-    let mut failure: i32 = 0;
-    let table = Table::new().unwrap();
-    for line in contents.lines() {
-        if let Some(i) = filter_line(line) {
-            let r = Parser::new(i);
-            match r.parse() {
-                Some(_) => success += 1,
-                None => {
-                    failure += 1;
-                    println!("{}", line)
-                }
-            }
-        }
-    }
-    // println!("{:?}", table);
-    println!("success: {}\nfailure: {}", success, failure);
+    let filtered_contents = first_pass(contents)?;
+    second_pass(filtered_contents)?;
     Ok(())
 }
 
+/// Filters out comments and empty lines
+/// Writes valid assembly code to new file with BufWriter
+/// Returns new file
+fn first_pass(contents: BufReader<R>) -> Result<R> {
+    // for each line in file
+    //     if line is not a comment
+    //         write line to new_buffer
+    //             if line is a Label
+    //                 write line to labels.json
+    // return new_buffer
+    let lines = contents.lines.collect();
+    let total = lines.len();
+    let mut writer = BufWriter::with_capacity(total, Vec::new());
+
+    for line in contents.lines() {
+        if let Some(i) = filter_line(line) {
+            let r = Parser::new(i);
+            if let Some(i) = r.l_command() {
+                todo!()  // 
+            }
+        }
+    }
+}
+
+/// Translates assembly code to binary
+fn second_pass(contents: BufReader<R>) -> Result<()> {
+    //
+    let (comp,
+         jump,  
+         dest, 
+         symbol) = Table::predefined().unwrap();  // Improve error handling
+
+    // for each line in file
+    //     determine command type
+    //     translate command to binary via corresponding hashmap
+    // write binary translation to new_file
+}
+
+/// Filters out comments and empty lines
 pub fn filter_line(line: &str) -> Option<String>{
     let idx = line.find("//");
     let line: &str = match idx {

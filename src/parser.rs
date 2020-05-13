@@ -15,29 +15,22 @@ impl Parser {
 
     /// Identifies the instruction's command type and parses attributes
     pub fn parse(&self) -> Option<Command> {
-        if let Some(a) = self.a_command() {
-           return Some(Command::A(a))
+        if let Some(address) = self.a_command() {
+           return Some(Command::A(address))
         }
-        if let Some(l) = self.l_command() {
-            return Some(Command::L(l))
+        if let Some(label) = self.l_command() {
+            return Some(Command::L(label))
         }
-        if let Some(c) = self.c_command() {
-            // TODO: Find an alternative for unpacking values
-            return Some(Command::C(c.0, c.1, c.2))
+        if let Some((destination, computation, jump)) = self.c_command() {
+            return Some(Command::C(destination, computation, jump))
         }
         None
     }
 
     // TODO: Rename function
     fn a_command(&self) -> Option<Symbol> {
-        if let true = self.instruction.starts_with('@') {
-            let a = Regex::new(r"^@(?P<value>[a-zA-Z0-9_][a-zA-Z0-9_.$:]{0,}$)").unwrap();
-            match a.captures(&self.instruction) {
-                Some(cap) => return Some(Symbol::new(&cap["value"])),
-                None => return None
-            }
-        } 
-        None
+        let a = Regex::new(r"^@(?P<symbol>[a-zA-Z0-9_][a-zA-Z0-9_.$:]{0,}$)").unwrap();
+        a.captures(&self.instruction).map(|cap| Symbol::new(&cap["symbol"]))
     }
 
     // TODO: Rename function
@@ -48,49 +41,28 @@ impl Parser {
         match (semi, equal) {
             (true, false) => {  // comp;jump
                 let c = Regex::new(r"(?P<comp>.{1,3});(?P<jump>.{3})").unwrap();
-                match c.captures(&self.instruction) {
-                    Some(caps) => return Some(
-                        (
-                            Dest::empty(),
-                            Comp::new(&caps["comp"]),
-                            Jump::new(&caps["jump"]),
-                        )
-                    ),
-                    None => return None
-                }
+                c.captures(&self.instruction).map(|caps|
+                    Dest::empty(),
+                    Comp::new(&caps["comp"]),
+                    Jump::new(&caps["jump"]),
+                )
             },
             (false , true) => {  // dest=comp
                 let c = Regex::new(r"^(?P<dest>[AMD]{1,3})=(?P<comp>.{1,3})").unwrap();
-                match c.captures(&self.instruction) {
-                    Some(caps) => return Some(
-                        (
-                            Dest::new(&caps["dest"]),
-                            Comp::new(&caps["comp"]),
-                            Jump::empty(),
-                        )
-                    ),
-                    None => return None
-                }
-
+                c.captures(&self.instruction).map(|caps|
+                    Dest::new(&caps["dest"]),
+                    Comp::new(&caps["comp"]),
+                    Jump::empty(),
+                )
             },
-            (_, _) => { return None },  // not valid
+            (_, _) => { None },  // not valid
         }
     }
 
     // TODO: Rename function
     fn l_command(&self) -> Option<Symbol> {
-        let left_parenthesis = self.instruction.starts_with('(');
-        let right_parenthesis = self.instruction.ends_with(')');
-        match (left_parenthesis, right_parenthesis) {
-            (true, true) => {
-                let l = Regex::new(r"^\((?P<symbol>[^)]+)\)$").unwrap();
-                match l.captures(&self.instruction) {
-                    Some(cap) => Some(Symbol::new(&cap["symbol"])),
-                    None => None
-                }
-            },
-            _ => None
-        }
+        let l = Regex::new(r"^\((?P<symbol>[^)]+)\)$").unwrap();
+        l.captures(&self.instruction).map(|cap| Symbol::new(&cap["symbol"]))
     }
 }
     
