@@ -3,12 +3,14 @@ use std::io::{BufReader, BufWriter};
 use std::io::prelude::*;
 use std::error::Error;
 
+pub mod error;
+pub use error::{AsmError, AsmResult};
 pub mod parser;
 use parser::Parser;
 pub mod tables;
 use tables::Table;
 
-pub fn run(filename: String) -> std::io::Result<()> {
+pub fn run(filename: String) -> AsmResult {
     let assembly = File::open(filename)?;
     let mut buffered = BufReader::new(assembly);
     let mut contents = String::new();
@@ -21,7 +23,7 @@ pub fn run(filename: String) -> std::io::Result<()> {
 /// Filters out comments and empty lines
 /// Writes valid assembly code to new file with BufWriter
 /// Returns new file
-fn first_pass(contents: BufReader<R>) -> Result<R> {
+fn first_pass(contents: BufReader<R>) -> AsmResult<R> {
     // for each line in file
     //     if line is not a comment
     //         write line to new_buffer
@@ -40,10 +42,11 @@ fn first_pass(contents: BufReader<R>) -> Result<R> {
             }
         }
     }
+    unimplemented!()
 }
 
 /// Translates assembly code to binary
-fn second_pass(contents: BufReader<R>) -> Result<()> {
+fn second_pass(contents: BufReader<R>) -> AsmResult {
     //
     let (comp,
          jump,  
