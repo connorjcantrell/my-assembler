@@ -39,28 +39,35 @@ impl Parser {
         let semi = self.instruction.find(';').is_some();
         let equal = self.instruction.find('=').is_some();
         match (semi, equal) {
-            (true, false) => {  // comp;jump
+            // comp;jump
+            (true, false) => {
                 let c = Regex::new(r"(?P<comp>.{1,3});(?P<jump>.{3})").unwrap();
-                c.captures(&self.instruction).map(|caps|
-                    Dest::empty(),
-                    Comp::new(&caps["comp"]),
-                    Jump::new(&caps["jump"]),
-                )
-            },
-            (false , true) => {  // dest=comp
+                c.captures(&self.instruction).map(|caps| {
+                    (
+                        Dest::empty(),
+                        Comp::new(&caps["comp"]),
+                        Jump::new(&caps["jump"]),
+                    )
+                })
+            }
+            // dest=comp
+            (false, true) => {
                 let c = Regex::new(r"^(?P<dest>[AMD]{1,3})=(?P<comp>.{1,3})").unwrap();
-                c.captures(&self.instruction).map(|caps|
-                    Dest::new(&caps["dest"]),
-                    Comp::new(&caps["comp"]),
-                    Jump::empty(),
-                )
-            },
-            (_, _) => { None },  // not valid
+                c.captures(&self.instruction).map(|caps| {
+                    (
+                        Dest::new(&caps["dest"]),
+                        Comp::new(&caps["comp"]),
+                        Jump::empty(),
+                    )
+                })
+            }
+            // not valid
+            (_, _) => None,
         }
     }
 
     // TODO: Rename function
-    fn l_command(&self) -> Option<Symbol> {
+    pub(crate) fn l_command(&self) -> Option<Symbol> {
         let l = Regex::new(r"^\((?P<symbol>[^)]+)\)$").unwrap();
         l.captures(&self.instruction).map(|cap| Symbol::new(&cap["symbol"]))
     }
