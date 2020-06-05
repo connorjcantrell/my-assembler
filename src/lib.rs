@@ -1,59 +1,53 @@
-use std::fs::File;
-use std::io::{BufReader, BufWriter};
-use std::io::prelude::*;
-use std::error::Error;
-
+use std::fs;
+pub mod error;
+pub use error::{AsmError, AsmResult};
 pub mod parser;
 use parser::Parser;
 pub mod tables;
-use tables::Table;
 
-pub fn run(filename: String) -> std::io::Result<()> {
-    let assembly = File::open(filename)?;
-    let mut buffered = BufReader::new(assembly);
-    let mut contents = String::new();
-    buffered.read_to_string(&mut contents)?;
-    let filtered_contents = first_pass(contents)?;
-    second_pass(filtered_contents)?;
+pub fn run(filename: String) -> AsmResult {
+    let assembly = fs::read_to_string(filename)?;
+    let mut filtered_contents = String::new();
+    first_pass(&assembly, &mut filtered_contents)?;
+    let mut bin = Vec::new();
+    second_pass(&filtered_contents, &mut bin)?;
     Ok(())
 }
 
 /// Filters out comments and empty lines
 /// Writes valid assembly code to new file with BufWriter
 /// Returns new file
-fn first_pass(contents: BufReader<R>) -> Result<R> {
+fn first_pass(contents: &str, filtered: &mut String) -> AsmResult {
     // for each line in file
     //     if line is not a comment
     //         write line to new_buffer
     //             if line is a Label
     //                 write line to labels.json
     // return new_buffer
-    let lines = contents.lines.collect();
-    let total = lines.len();
-    let mut writer = BufWriter::with_capacity(total, Vec::new());
 
     for line in contents.lines() {
         if let Some(i) = filter_line(line) {
             let r = Parser::new(i);
             if let Some(i) = r.l_command() {
-                todo!()  // 
+                todo!("write filtered contents to `filtered`");
             }
         }
     }
+    unimplemented!()
 }
 
 /// Translates assembly code to binary
-fn second_pass(contents: BufReader<R>) -> Result<()> {
-    //
-    let (comp,
-         jump,  
-         dest, 
-         symbol) = Table::predefined().unwrap();  // Improve error handling
+fn second_pass(contents: &str, bin: &mut Vec<u8>) -> AsmResult {
+    // let (comp,
+    //      jump,
+    //      dest,
+    //      symbol) = Table::predefined()?;
 
     // for each line in file
     //     determine command type
     //     translate command to binary via corresponding hashmap
     // write binary translation to new_file
+    unimplemented!()
 }
 
 /// Filters out comments and empty lines

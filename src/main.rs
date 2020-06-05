@@ -13,5 +13,8 @@ struct Opt {
 
 fn main() {
     let opt = Opt::from_args();
-    assembler::run(opt.input).unwrap();
+    if let Err(e) = assembler::run(opt.input) {
+        eprintln!("Error: {}", e);
+        ::std::process::exit(1)
+    }
 }
