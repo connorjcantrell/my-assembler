@@ -51,14 +51,14 @@ fn second_pass(contents: &str, bin: &mut Vec<u8>) -> AsmResult {
 }
 
 /// Filters out comments and empty lines
-pub fn filter_line(line: &str) -> Option<String>{
+pub fn filter_line(line: &str) -> Option<String> {
     let idx = line.find("//");
     let line: &str = match idx {
         Some(x) => line[..x].trim(),
-        None => line.trim()
+        None => line.trim(),
     };
     if line.len() == 0 {
-        return None
+        return None;
     }
     Some(line.to_string())
 }

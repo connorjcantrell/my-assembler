@@ -7,22 +7,20 @@ pub struct Parser {
 }
 
 impl Parser {
-    pub fn new(instruction: String) -> Parser { 
-        Parser {
-            instruction
-        }
+    pub fn new(instruction: String) -> Parser {
+        Parser { instruction }
     }
 
     /// Identifies the instruction's command type and parses attributes
     pub fn parse(&self) -> Option<Command> {
         if let Some(address) = self.a_command() {
-           return Some(Command::A(address))
+            return Some(Command::A(address));
         }
         if let Some(label) = self.l_command() {
-            return Some(Command::L(label))
+            return Some(Command::L(label));
         }
         if let Some((destination, computation, jump)) = self.c_command() {
-            return Some(Command::C(destination, computation, jump))
+            return Some(Command::C(destination, computation, jump));
         }
         None
     }
@@ -30,7 +28,8 @@ impl Parser {
     // TODO: Rename function
     fn a_command(&self) -> Option<Symbol> {
         let a = Regex::new(r"^@(?P<symbol>[a-zA-Z0-9_][a-zA-Z0-9_.$:]{0,}$)").unwrap();
-        a.captures(&self.instruction).map(|cap| Symbol::new(&cap["symbol"]))
+        a.captures(&self.instruction)
+            .map(|cap| Symbol::new(&cap["symbol"]))
     }
 
     // TODO: Rename function
@@ -69,10 +68,11 @@ impl Parser {
     // TODO: Rename function
     pub(crate) fn l_command(&self) -> Option<Symbol> {
         let l = Regex::new(r"^\((?P<symbol>[^)]+)\)$").unwrap();
-        l.captures(&self.instruction).map(|cap| Symbol::new(&cap["symbol"]))
+        l.captures(&self.instruction)
+            .map(|cap| Symbol::new(&cap["symbol"]))
     }
 }
-    
+
 #[derive(Debug, Clone)]
 pub enum Command {
     A(Symbol),
@@ -82,13 +82,13 @@ pub enum Command {
 
 #[derive(Debug, Clone)]
 pub struct Symbol {
-    value: String
+    value: String,
 }
 
 impl Symbol {
     pub fn new(input: &str) -> Symbol {
         Symbol {
-            value: input.to_string()
+            value: input.to_string(),
         }
     }
 }
@@ -101,7 +101,10 @@ pub struct Comp {
 
 impl Comp {
     pub fn new(mnemonic: &str) -> Comp {
-        Comp {mnemonic: mnemonic.to_string(), binary: None}
+        Comp {
+            mnemonic: mnemonic.to_string(),
+            binary: None,
+        }
     }
 }
 
@@ -118,11 +121,11 @@ impl Dest {
             binary: None,
         }
     }
-    
+
     pub fn empty() -> Dest {
         Dest {
             mnemonic: None,
-            binary: None
+            binary: None,
         }
     }
 }
@@ -143,7 +146,7 @@ impl Jump {
     pub fn empty() -> Jump {
         Jump {
             mnemonic: None,
-            binary: None
+            binary: None,
         }
     }
 }
