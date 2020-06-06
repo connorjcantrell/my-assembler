@@ -3,7 +3,7 @@ use std::error::Error;
 use std::fs::File;
 use std::io::prelude::*;
 
-use serde::{Serialize, Deserialize};
+use serde::{Deserialize, Serialize};
 use serde_json;
 
 #[derive(Serialize, Deserialize, Debug)]
@@ -12,7 +12,7 @@ pub struct Table {
     jump: HashMap<String, String>,
     dest: HashMap<String, String>,
     symbol: HashMap<String, i32>,
-    variable: HashMap<String, String>
+    variable: HashMap<String, String>,
 }
 
 impl Table {
